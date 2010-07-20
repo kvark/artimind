@@ -38,7 +38,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.boo" />
-    <Compile Include="Main.boo" />
+    <Compile Include="Cat.boo" />
+    <Compile Include="Mind.boo" />
+    <Compile Include="Program.boo" />
+    <Compile Include="Net.boo" />
   </ItemGroup>
   <Import Project="$(BooBinPath)\Boo.Microsoft.Build.targets" />
 </Project>
