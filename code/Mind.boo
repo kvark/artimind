@@ -7,6 +7,9 @@ public class Method:
 	public final ron	as Neuron
 	public result		= 0
 	
+	public Name as string:
+		get: return fun.Method.Name
+	
 	public def constructor(f as callable):
 		fun = f
 		ron = Neuron()
@@ -40,14 +43,17 @@ public class Mind:
 	public def reset(lrec as (callable), lact as (callable)) as void:
 		neurons.Clear()
 		# fill actors
-		for rec in lrec:
-			actors.Add( Method(rec) )
-		# fill receptors & links
 		for act in lact:
-			me = Method(act)
-			receptors.Add(me)
+			met = Method(act)
+			neurons.Add( met.ron )
+			actors.Add(met)
+		# fill receptors & links
+		for rec in lrec:
+			met = Method(rec)
+			neurons.Add( met.ron )
+			receptors.Add(met)
 			for ac in actors:
-				me.ron.linkTo( ac.ron )
+				met.ron.linkTo( ac.ron )
 	
 
 	public def send(generate as bool) as void:
@@ -86,15 +92,15 @@ public class Mind:
 		return null if sum<=0f
 		sum *= random.NextDouble()
 		# choose method
+		met	as Method = null
 		for act in actors:
 			oldSum = sum
 			sum -= transFunc( act.ron.charge )
 			if sum*oldSum < 0f:
-				act.execute()
+				(met = act).execute()
 				act.ron.charge = kAfterMath * act.result
-				return act
 			else: act.ron.charge = 0f
-		return null
+		return met
 
 	
 	public def learn() as void:
@@ -120,11 +126,11 @@ public class Mind:
 		while sta.Count:
 			ron = sta.Pop()
 			continue	if ron.charge
-			ron.arms.ForEach() do(ref ax as Axon):
+			for ax in ron.arms:
 				assert ax.dest != ron
 				den = ax.dest.charge
-				return	if not den
-				assert not ron.charge or ron.charge == den
+				continue	if not den
+				assert ron.charge in (0f,den)
 				ron.charge = den	# careful!
 				add = den * (ax.power,ron.sum)[den>0f]
 				ax.power += add

@@ -2,9 +2,9 @@
 
 import System.Collections.Generic
 
-public struct Axon:
-	public dest		as Neuron
-	public power	as single
+public class Axon:
+	public dest		as Neuron	= null
+	public power	as single	= 0f
 
 
 public class Neuron:
@@ -22,6 +22,6 @@ public class Neuron:
 		charge = 0f
 		return	if sum < 1.0e10
 		sum = 0f
-		arms.ForEach() do(ref ax as Axon):
+		for ax in arms:
 			ax.power *= 0.01f
 			sum += ax.power
