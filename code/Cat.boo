@@ -8,7 +8,7 @@ public class Creature:
 	public def step() as void:
 		mind.send(true)
 		action = mind.decide()
-		mind.learn()	if action.fun
+		mind.learn()	if action
 
 
 public class CatBasic(Creature):
