@@ -3,12 +3,15 @@
 public class Creature:
 	public final name	as string
 	public final mind	= Mind()
+	private time	as single	= 0f
+	
 	public def constructor(str as string):
 		name = str
 	public def step() as Method:
-		mind.send(true)
+		mind.send(time,true)
 		action = mind.decide()
-		mind.learn()	if action
+		mind.learn(time)	if action
+		time += 1f
 		return action
 
 

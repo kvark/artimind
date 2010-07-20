@@ -56,7 +56,7 @@ public class Mind:
 				met.ron.linkTo( ac.ron )
 	
 
-	public def send(generate as bool) as void:
+	public def send(time as single, generate as bool) as void:
 		que = Queue[of Neuron]()
 		for rec in receptors:
 			rec.execute()	if generate
@@ -66,6 +66,7 @@ public class Mind:
 		while que.Count:
 			ron = que.Dequeue()
 			continue	if not ron.arms.Count
+			ron.load.Value[time] = ron.charge
 			ron.charge -= kNeuroTax
 			if ron.charge < kIdLevel:
 				ron.charge = 0f
@@ -103,7 +104,7 @@ public class Mind:
 		return met
 
 	
-	public def learn() as void:
+	public def learn(time as single) as void:
 		que = Queue[of Neuron]()
 		sta = Stack[of Neuron]()
 		# put initial = receptors
@@ -131,6 +132,7 @@ public class Mind:
 				den = ax.dest.charge
 				continue	if not den
 				assert ron.charge in (0f,den)
+				ax.response.Value[time] = den
 				ron.charge = den	# careful!
 				add = den * (ax.power,ron.sum)[den>0f]
 				ax.power += add
