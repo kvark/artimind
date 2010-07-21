@@ -11,6 +11,7 @@ public class Creature:
 		mind.send(time,true)
 		action = mind.decide()
 		mind.learn(time)	if action
+		mind.houseKeep(time)
 		time += 1f
 		return action
 

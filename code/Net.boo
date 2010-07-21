@@ -4,7 +4,10 @@ import System
 import System.Collections.Generic
 
 public struct Number:
-	private final static KT	= 1.5f
+	private static final Decay	= 0.9f
+	private static final MaxVal	= 1f / (1f-Decay)
+	private static final KT		= Math.Log(Decay)
+
 	private timeBase	as single
 	private val			as single
 	
@@ -12,10 +15,11 @@ public struct Number:
 		timeBase,val = 0f,init
 	
 	public Value[time as single] as single:
-		get: return val * Math.Exp( KT*(timeBase-time) )
+		# normalizing the result
+		get: return (1f-Decay) * val * Math.Exp( KT*(time-timeBase) )
 		set: # value is RELATIVE
-			multi = Math.Exp( KT*(time-timeBase) )
-			if multi > 1.0e12:
+			multi = Math.Exp( KT*(timeBase-time) )
+			if multi > 1.0e5:
 				timeBase = time
 				val /= multi
 				multi = 1f
@@ -26,12 +30,16 @@ public struct Number:
 public class Axon:
 	public dest		as Neuron	= null
 	public power	as single	= 0f
-	public response	 = Number(0f)
+	public response	= Number(1f)
+	public profit	= Number(1f)
+	public def getCovariation(n as Neuron, t as single) as single:
+		return profit.Value[t] - response.Value[t] * n.load.Value[t]
 
 
 public class Neuron:
 	public final arms	= List[of Axon]()
 	public charge	as single	= 0f
+	public response	as single	= 0f
 	public sum		as single	= 0f
 	public load		= Number(0f)
 	
@@ -42,9 +50,12 @@ public class Neuron:
 		arms.Clear()
 		sum = 0f
 	public def clean() as void:
-		charge = 0f
+		charge = response = 0f
 		return	if sum < 1.0e10
-		sum = 0f
 		for ax in arms:
 			ax.power *= 0.01f
+		sync()
+	public def sync() as void:
+		sum = 0f
+		for ax in arms:
 			sum += ax.power
