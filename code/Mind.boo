@@ -3,14 +3,14 @@
 import System.Collections.Generic
 
 public class Method:
-	private final fun	as callable(int) as int
+	private final fun	as System.Func[of int,int]
 	public final ron	as Neuron
 	public result		= 0
 	
 	public Name as string:
 		get: return fun.Method.Name
 	
-	public def constructor(f as callable):
+	public def constructor(f as System.Func[of int,int]):
 		fun = f
 		ron = Neuron()
 	public def execute() as void:
@@ -40,7 +40,7 @@ public class Mind:
 			assert not me.ron.arms.Count
 			assert me.ron in neurons
 		
-	public def reset(lrec as (callable), lact as (callable)) as void:
+	public def reset(lrec as (System.Func[of int,int]), lact as (System.Func[of int,int])) as void:
 		neurons.Clear()
 		# fill actors
 		for act in lact:

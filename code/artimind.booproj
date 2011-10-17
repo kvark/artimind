@@ -43,5 +43,10 @@
     <Compile Include="Program.boo" />
     <Compile Include="Net.boo" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
   <Import Project="$(BooBinPath)\Boo.Microsoft.Build.targets" />
 </Project>

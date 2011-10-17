@@ -11,8 +11,11 @@ public struct Number:
 	private timeBase	as single
 	private val			as single
 	
-	public def constructor(init as single):
+	private def constructor(init as single):
 		timeBase,val = 0f,init
+	
+	public static final	Zero	= Number(0f)
+	public static final	One		= Number(1f)
 	
 	public Value[time as single] as single:
 		# normalizing the result
@@ -30,8 +33,8 @@ public struct Number:
 public class Axon:
 	public dest		as Neuron	= null
 	public power	as single	= 0f
-	public response	= Number(1f)
-	public profit	= Number(1f)
+	public response	= Number.One
+	public profit	= Number.One
 	public def getCovariation(n as Neuron, t as single) as single:
 		return profit.Value[t] - response.Value[t] * n.load.Value[t]
 
@@ -41,7 +44,7 @@ public class Neuron:
 	public charge	as single	= 0f
 	public response	as single	= 0f
 	public sum		as single	= 0f
-	public load		= Number(0f)
+	public load		= Number.Zero
 	
 	public def linkTo(n as Neuron) as void:
 		arms.Add( Axon(dest:n,power:1f) )
