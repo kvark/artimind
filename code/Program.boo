@@ -8,7 +8,7 @@ public class World:
 env = World()
 print "Hello, World!"
 
-ct = CatBasic('cell',env)
+ct = Cat('cell',env)
 while true:
 	print "(food:${env.food})"
 	key = Console.ReadKey(true)

@@ -41,7 +41,6 @@
     <Compile Include="Cat.boo" />
     <Compile Include="Mind.boo" />
     <Compile Include="Program.boo" />
-    <Compile Include="Net.boo" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Core">
