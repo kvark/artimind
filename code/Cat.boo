@@ -8,14 +8,16 @@ public class Agent:
 	public def constructor(str as string):
 		name = str
 	public def step() as Method:
+		mind.checkValidity()
+		mind.cleanCharges()
 		mind.generateInputs()
-		#mind.send(time)
-		#action = mind.decide()
-		#mind.learn(time)	if action
-		#mind.houseKeep(time)
+		mind.propageateSignal()
+		action = mind.decideAction()
+		if action:
+			mind.fillAntiCharge()
+			mind.learn(action)
 		time += 1f
-		#return action
-		return null
+		return action
 
 
 public class Cat(Agent):

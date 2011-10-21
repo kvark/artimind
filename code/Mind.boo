@@ -2,6 +2,7 @@
 
 import System.Collections.Generic
 
+
 public class Method:
 	private	final	fun		as System.Func[of int]
 	public	final	ron		as Neuron
@@ -20,7 +21,7 @@ public class Method:
 	public def propagate() as bool:
 		if not result:
 			return false
-		ron.current += result * 1f
+		ron.current = System.Math.Abs(result) * 1f
 		return true
 
 	public def check() as void:
@@ -54,11 +55,14 @@ public class Neuron:
 		return current / axons.Count
 
 
+public class RevNeuron(Neuron):
+	pass
+
+
 
 
 public class Mind:
 	private	static	final	random		= System.Random()
-	
 	protected		final	neurons		= List[of Neuron]()
 	protected		final	receptors	= List[of Method]()
 	protected		final	actors		= List[of Method]()
@@ -148,44 +152,82 @@ public class Mind:
 		return met
 
 	
-	public def learn(time as single) as void:
-		# initialize state
+	public def fillAntiCharge() as void:
+		# clean currents
 		for n in neurons:
 			n.current = 0f
-		for act in actors:
-			act.propagate()
 		# put initial = receptors
 		que = Queue[of Neuron]()
 		sta = Stack[of Neuron]()
 		for rec in receptors:
-			if not rec.result:
-				continue
 			que.Enqueue( rec.ron )
 			sta.Push( rec.ron )
-			rec.ron.current = single.NaN
+			rec.ron.current = single.NegativeInfinity
 		# form the neuron stack
 		while que.Count:
 			ron = que.Dequeue()
 			for ax in ron.axons:
-				if ax.current or not ax.axons.Count:
-					continue
-				que.Enqueue(ax)
-				sta.Push(ax)
-				ax.current = single.NaN
+				if not ax.current:
+					que.Enqueue(ax)
+					sta.Push(ax)
+					ax.current = single.NegativeInfinity
+				if single.IsNegativeInfinity(ax.current):
+					ax.totalAnti += 1f
+			ron.current = single.PositiveInfinity
+		# fetch results
+		for act in actors:
+			act.propagate()
 		# unfold the stack
 		while sta.Count:
 			ron = sta.Pop()
-			assert ron.current == single.NaN
-			if not ron.axons.Count:
-				continue
-			kf = 1f / ron.axons.Count
+			if single.IsPositiveInfinity(ron.current):
+				ron.current = 0f
 			for ax in ron.axons:
-				den = ax.current
-				if not den:	continue
-				ron.current += kf * den
+				ron.current += ax.current
+			num = ron.totalAnti
+			ron.totalAnti = ron.current
+			ron.current /= num
+
+
+	public def learn(met as Method) as int:
+		pos = findMax(1f,0f)
+		neg = findMax(-1f,1f)
+		if pos==neg:
+			return 0
+		if met.result > 0:
+			pass
+		elif met.result < 0:
+			pass
+		return 0
 
 
 	#-------------------------------------------
 	#	INTERNAL ROUTINES
 	#-------------------------------------------
 
+	private def findMax(kForw as single, kBack as single) as Neuron:
+		mv = 0f
+		rez as Neuron = null
+		for n in neurons:
+			cur = kForw * n.totalCharge + kBack * n.totalAnti
+			if cur>mv:
+				mv = cur
+				rez = n
+		return rez
+
+	
+	private def findRoots(n as Neuron, base as Neuron) as Neuron*:
+		if not base:
+			for x in neurons:
+				x.current = 0f
+			for rec in receptors:
+				for x in findRoots(n,rec.ron):
+					yield x
+		else:
+			if base.current:	return
+			base.current = 1f
+			if n in base.axons:
+				yield base
+			for ax in base.axons:
+				for x in findRoots(n,ax):
+					yield x
