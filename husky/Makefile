@@ -1,2 +1,4 @@
+OPT	=-XImpredicativeTypes
+
 all:
-	ghc --make Core Net Env Main -o test
+	ghc --make Main ${OPT} -o test
