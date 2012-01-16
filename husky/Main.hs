@@ -2,7 +2,8 @@ module Main
 ( main
 ) where
 
-import Core
+import AI.Core
+
 
 main = return ()
 

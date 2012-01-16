@@ -1,6 +1,6 @@
-module Core
+module AI.Core
 (	Body, World, Sensor, Actor,
-	Think, Neuron, Link, Mind
+	Think, decide, learn, MindZero
 ) where
 
 
@@ -16,29 +16,8 @@ class Think t where
 	learn	:: (World w, Body b) => t -> [Actor (w,b)] -> t
 
 
-data Neuron = Neuron	{
-}deriving (Show,Eq)
-
-
-data Link =	Link	{
-	source	:: Neuron,
-	target	:: Neuron
-}deriving (Show,Eq)
-
-
-data Mind = Mind	{
-	nodes	:: [Neuron],
-	links	:: [Link]
-}deriving ()
-
-
 data MindZero = MindZero	{}
 
 instance Think MindZero where
---	decide _ _ = id
---	learn t _ = t
-
-
-instance Think Mind where
---	decide _ _ = id
---	learn t _ = t
+	decide _ _ = id
+	learn t _ = t

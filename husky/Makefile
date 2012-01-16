@@ -1,2 +1,2 @@
 all:
-	ghc --make Core Main
+	ghc --make Core Net Main
