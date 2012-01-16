@@ -24,3 +24,4 @@ data Mind = Mind	{
 instance Think Mind where
 	decide _ _ = id
 	learn t _ = t
+

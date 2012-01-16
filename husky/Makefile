@@ -1,2 +1,2 @@
 all:
-	ghc --make Core Net Main -o test
+	ghc --make Core Net Env Main -o test
