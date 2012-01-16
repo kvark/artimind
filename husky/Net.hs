@@ -22,6 +22,6 @@ data Mind = Mind	{
 
 
 instance Think Mind where
-	decide _ _ = id
+	decide _ _ = (id,"default")
 	learn t _ = t
 
