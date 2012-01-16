@@ -1,6 +1,9 @@
 syntax: glob
 
 obj
+test
 *.dll
 *.pdb
 *.exe
+*.o
+*.hi
