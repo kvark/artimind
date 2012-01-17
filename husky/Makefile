@@ -1,4 +1,4 @@
-OPT	=-XImpredicativeTypes
+OPT	=
 EXE	=test
 
 all:
