@@ -2,7 +2,7 @@ OPT	=-XMultiParamTypeClasses -XFunctionalDependencies
 EXE	=test
 
 all:
-	ghc --make Main ${OPT} -o ${EXE}
+	cd code && ghc --make Main ${OPT} -o ../${EXE}
 
 clean:
 	rm ${EXE}
