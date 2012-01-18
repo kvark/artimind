@@ -1,31 +1,26 @@
 module AI.Core
 (	Body, World,
-	Strength, Sensor, Actor,
+	Energy, Sensor, Actor,
 	Think, decide, learn,
-	constFeel, idleActor, ZeroMind(ZeroMind)
+	feelConst, actIdle,
 ) where
 
 
 class Body b
 class World w
 
-type Strength = Int
-type Actor w b = (w,b) -> (w,b,Strength)
-type Sensor w b = (w,b) -> Strength
+type Energy = Int
+type Actor w b = (w,b) -> (w,b,Energy)
+type Sensor w b = (w,b) -> Energy
 
 
-class Think t where
-	decide	:: (World w, Body b) => t -> [Sensor w b] -> (Actor w b,String)
-	learn	:: (World w, Body b) => t -> (Actor w b,Strength) -> t
+class (World w, Body b) => Think w b t | t->w, t->b where
+	decide	:: t -> [Sensor w b] -> (Actor w b,String)
+	learn	:: t -> (Actor w b,Energy) -> t
 
 
-constFeel	:: (World w, Body b) => Strength -> (w,b) -> Strength
-constFeel val _ = val
+feelConst	:: (World w, Body b) => Energy -> (w,b) -> Energy
+feelConst val _ = val
 
-idleActor	:: (World w, Body b) => Actor w b
-idleActor (w,b) = (w,b,0)
-
-data ZeroMind = ZeroMind	{}
-instance Think ZeroMind where
-	decide ZeroMind _ = (idleActor,"none")
-	learn ZeroMind _ = ZeroMind
+actIdle	:: (World w, Body b) => Actor w b
+actIdle (w,b) = (w,b,0)

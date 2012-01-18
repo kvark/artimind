@@ -5,16 +5,16 @@ module Main
 import qualified AI.Core as Ai
 import qualified Env
 
-iterFun	:: (Ai.World w, Ai.Body b, Ai.Think t) => ([Ai.Sensor w b],(w,b,t)) -> ((String,Ai.Strength),(w,b,t))
+iterFun	:: (Ai.World w, Ai.Body b, Ai.Think w b t) => ([Ai.Sensor w b],(w,b,t)) -> ((String,Ai.Energy),(w,b,t))
 iterFun (s,(w,b,t)) =
 	let	(actor,description) = Ai.decide t s
 		(w',b',result) = actor (w,b)
 		t' = Ai.learn t (actor,result)
 	in	((description,result), (w',b',t'))
 
-sensors = [Ai.constFeel 0]
-state :: Int -> (( String, Ai.Strength ),( Env.World, Env.Body, Ai.ZeroMind ))
-state 0 = (("init",0), (Env.World,Env.Body,Ai.ZeroMind))
+sensors = [Ai.feelConst 0]
+state :: Int -> (( String, Ai.Energy ),( Env.World, Env.Body, Env.TestMind ))
+state 0 = (( "init", 0 ), ( Env.World 0, Env.Body, Env.TestMind ))
 state n = iterFun (sensors, snd $ state (n-1))
 
 message 0 = ("", snd $ state 0)
