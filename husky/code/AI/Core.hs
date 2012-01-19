@@ -1,10 +1,12 @@
 module AI.Core
-( World, Heat, Sensor, Actor
-, Ignot, Choice, Think, Body
-, ZeroMind(ZeroMind)
-, feelConst, actIdle
-, chooseFirst, chooseMax
+( World, Heat, Sensor, Actor, Ignot, Choice
+, Think (alloc,decide,learn)
+, Body (addSensors,addActors,stepUp,stepDown,cycle)
+, ZeroMind (ZeroMind)
+, feelConst, actIdle, chooseFirst, chooseMax
 ) where
+
+import Data.List (maximumBy)
 
 
 class World w
@@ -43,8 +45,11 @@ instance Think ZeroMind () where
 chooseFirst	:: Choice x
 chooseFirst = fst . head
 
+compareHeat	:: (Ord a) => (b,a) -> (b,a) -> Ordering
+compareHeat (x1,y1) (x2,y2) = compare y1 y2
+
 chooseMax 	:: Choice x
-chooseMax = fst . head
+chooseMax = fst . maximumBy compareHeat
 
 
 class (World w) => Body b w | b->w where

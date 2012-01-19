@@ -1,10 +1,11 @@
-module Person	(
-	Person
+module AI.Person	(
+Person
+, makePerson
 )where
 
 import Data.Maybe (fromJust)
 import Data.List (find)
-import Ai.Core
+import AI.Core
 
 
 data (World w, Think t x) => Person w t x =
@@ -38,3 +39,12 @@ instance (World w, Think t x) => Body (Person w t x) w where
 			(hand,_,_) = fromJust target
 			newBrain = learn brain (hand,heat)
 		in	Person newBrain chooser sensors actors
+
+
+makePerson	:: (World w, Think t x) =>
+	t -> (Choice x) -> [(String,Sensor w)] -> [(String,Actor w)] -> Person w t x
+makePerson brain chooser sensors actors =
+	let	p0 = Person brain chooser [] []
+		p1 = addSensors p0 sensors
+		p2 = addActors p1 actors
+	in	p2
