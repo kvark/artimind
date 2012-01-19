@@ -1,5 +1,6 @@
 module AI.Net
-( Mind
+( Neuron
+, Net (Net,nodes,links)
 ) where
 
 import AI.Core
@@ -14,30 +15,30 @@ data Link =	Link	{
 }deriving (Show,Eq)
 
 
-data Mind = Mind	{
+data Net = Net	{
 	nodes	:: [Neuron],
 	links	:: [Link]
 }deriving ()
 
-data AnyBody
-instance Body AnyBody
-
-data AnyWorld
-instance World AnyWorld
 
 transmitCost = 0.1
 
 ---	calculate the propagated neuron charge	---
-propagate	:: [Link] -> Neuron -> Real
+propagate	:: [Link] -> Neuron -> Float
 propagate li n = let
-		incidents = filter ((n==) . target) li
+		incidents = map source $ filter ((n==) . target) li
 		inputs = map (propagate li) incidents
 		total = sum inputs -transmitCost
 	in	max 0 total
 
 
-instance Think AnyWorld AnyBody Mind where
-	decide t sensors =
-		let
-		in
-	learn t _ = t
+instance Think Net Neuron where
+	alloc t num = let
+			nr = take num $ repeat Neuron
+			m = Net {nodes = nr ++ nodes t, links = links t}
+		in	(m,nr)
+	decide t charged_inputs outputs = let
+			mapper = round . (propagate (links t))
+			charges = map mapper outputs
+		in	zip outputs charges
+	learn t (n,response) = t

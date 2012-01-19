@@ -18,10 +18,10 @@ actEat (World n)
 	| n<=0		= (World 0, -1)
 	| otherwise	= (World (n-1), 3)
 
-type Cat = Ai.Person World Ai.ZeroMind ()
-
+type Cat = Ai.Person World Ai.Net Ai.Neuron --Ai.ZeroMind
+makeCat	:: Cat
 makeCat = let
-		brain = Ai.ZeroMind
+		brain = Ai.Net {Ai.nodes=[], Ai.links=[]}
 		sensors = [("const",Ai.feelConst 0)]
 		actors = [("eat",actEat)]
 	in	Ai.makePerson brain Ai.chooseMax sensors actors
