@@ -7,7 +7,8 @@ import qualified AI.Core as Ai
 import qualified Env
 
 
-iterFun	:: (Ai.World w, Ai.Body b, Ai.Think w b t) => ([Ai.Sensor w b],(w,b,t)) -> ((String,Ai.Energy),(w,b,t))
+iterFun	:: (Ai.World w, Ai.Body b, Ai.Think w b t) =>
+	([Ai.Sensor w b],(w,b,t)) -> ((String,Ai.Energy),(w,b,t))
 iterFun (s,(w,b,t)) =
 	let	(actor,description) = Ai.decide t s
 		(w',b',result) = actor (w,b)
@@ -35,4 +36,3 @@ message n =
 
 main = do
 	putStrLn $ intercalate "\n" $ reverse $ fst $ message 10
-

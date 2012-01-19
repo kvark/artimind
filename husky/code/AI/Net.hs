@@ -5,8 +5,7 @@ module AI.Net
 import AI.Core
 
 
-data Neuron = Neuron	{
-}deriving (Show,Eq)
+data Neuron = Neuron	deriving (Show,Eq)
 
 
 data Link =	Link	{
@@ -20,8 +19,25 @@ data Mind = Mind	{
 	links	:: [Link]
 }deriving ()
 
+data AnyBody
+instance Body AnyBody
 
-instance Think Mind where
-	decide _ _ = (idle,"default")
+data AnyWorld
+instance World AnyWorld
+
+transmitCost = 0.1
+
+---	calculate the propagated neuron charge	---
+propagate	:: [Link] -> Neuron -> Real
+propagate li n =
+	let	incidents = filter ((n==) . target) li
+		inputs = map (propagate li) incidents
+		total = sum inputs -transmitCost
+	in	max 0 total
+
+
+instance Think AnyWorld AnyBody Mind where
+	decide t sensors =
+		let
+		in
 	learn t _ = t
-

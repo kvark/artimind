@@ -1,4 +1,4 @@
-OPT	=-XMultiParamTypeClasses -XFunctionalDependencies
+OPT	=-XMultiParamTypeClasses -XFunctionalDependencies -XFlexibleInstances
 EXE	=test
 
 all:
