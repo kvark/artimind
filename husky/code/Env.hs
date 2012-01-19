@@ -5,8 +5,9 @@ module Env
 , actEat
 ) where
 
-import qualified AI.Core as Ai
-import qualified AI.Person as Ai
+import qualified AI.Core	as Ai
+import qualified AI.Person	as Ai
+import qualified AI.Net		as Ai
 
 
 data World = World Int	deriving (Show)
