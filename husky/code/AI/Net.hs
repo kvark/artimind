@@ -29,8 +29,8 @@ transmitCost = 0.1
 
 ---	calculate the propagated neuron charge	---
 propagate	:: [Link] -> Neuron -> Real
-propagate li n =
-	let	incidents = filter ((n==) . target) li
+propagate li n = let
+		incidents = filter ((n==) . target) li
 		inputs = map (propagate li) incidents
 		total = sum inputs -transmitCost
 	in	max 0 total

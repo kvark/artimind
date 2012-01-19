@@ -19,8 +19,8 @@ actEat (World n)
 
 type Cat = Ai.Person World Ai.ZeroMind ()
 
-makeCat =
-	let	brain = Ai.ZeroMind
+makeCat = let
+		brain = Ai.ZeroMind
 		sensors = [("const",Ai.feelConst 0)]
 		actors = [("eat",actEat)]
-	in Ai.makePerson brain Ai.chooseMax sensors actors
+	in	Ai.makePerson brain Ai.chooseMax sensors actors

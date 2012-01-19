@@ -58,8 +58,8 @@ class (World w) => Body b w | b->w where
 	stepUp		:: w -> b -> (String,Actor w)
 	stepDown	:: b -> (String,Heat) -> b
 	cycle		:: w -> b -> (w,b,String,Heat)
-	cycle world body =
-		let	(name,actor) = stepUp world body
+	cycle world body = let
+			(name,actor) = stepUp world body
 			(newWorld,response) = actor world
 			newBody = stepDown body (name,response)
-		in (newWorld,newBody,name,response)
+		in	(newWorld,newBody,name,response)
