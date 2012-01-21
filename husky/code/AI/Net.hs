@@ -21,19 +21,25 @@ data Net = Net	{
 }deriving ()
 
 
+countLinks	::	(Link->Neuron) -> [Link] -> Neuron -> Int
+countLinks fun links neuron	= length $ filter ((neuron==) . fun) links
+
+transmitCost	:: Float
 transmitCost = 0.1
 
 ---	calculate the propagated neuron charge	---
 --- TODO: cache results in a map ---
 type Pair = Ignot Neuron
 propagate	:: [Link] -> [Pair] -> Neuron -> Float
-propagate li charged_inputs n = let
+propagate links charged_inputs n = let
 		oper :: (Maybe Pair) -> Float
 		oper Nothing = let
-				incidents = map source $ filter ((n==) . target) li
-				inputs = map (propagate li charged_inputs) incidents
-				total = sum inputs -transmitCost
-			in	max 0 total
+				incidents = map source $ filter ((n==) . target) links
+				inCounter = countLinks source links
+				magnitudes = map (fromIntegral . inCounter) incidents
+				inputs = map (propagate links charged_inputs) incidents
+				total = sum (zipWith (/) inputs magnitudes)
+			in	max 0 (total-transmitCost)
 		oper (Just (nr,heat)) = fromIntegral heat
 		ignot = find ((n==) . fst) charged_inputs
 	in oper ignot

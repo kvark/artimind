@@ -41,10 +41,6 @@ instance Think ZeroMind () where
 	decide _ _ outputs = zip outputs (repeat (1::Heat))
 	learn t _ = t
 
-toMaybe	:: a -> (a->Bool) -> Maybe a
-toMaybe x predicate
-	| predicate	x	= Just x
-	| otherwise		= Nothing
 
 chooseFirst	:: Choice x
 chooseFirst = Just . fst . head
