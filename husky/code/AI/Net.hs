@@ -24,6 +24,7 @@ data Net = Net	{
 transmitCost = 0.1
 
 ---	calculate the propagated neuron charge	---
+--- TODO: cache results in a map ---
 type Pair = Ignot Neuron
 propagate	:: [Link] -> [Pair] -> Neuron -> Float
 propagate li charged_inputs n = let
