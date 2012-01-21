@@ -4,7 +4,7 @@ module AI.Net
 ) where
 
 import AI.Core
-
+import Data.List (find)
 
 data Neuron = Neuron	deriving (Show,Eq)
 
@@ -24,12 +24,18 @@ data Net = Net	{
 transmitCost = 0.1
 
 ---	calculate the propagated neuron charge	---
-propagate	:: [Link] -> Neuron -> Float
-propagate li n = let
-		incidents = map source $ filter ((n==) . target) li
-		inputs = map (propagate li) incidents
-		total = sum inputs -transmitCost
-	in	max 0 total
+type Pair = Ignot Neuron
+propagate	:: [Link] -> [Pair] -> Neuron -> Float
+propagate li charged_inputs n = let
+		oper :: (Maybe Pair) -> Float
+		oper Nothing = let
+				incidents = map source $ filter ((n==) . target) li
+				inputs = map (propagate li charged_inputs) incidents
+				total = sum inputs -transmitCost
+			in	max 0 total
+		oper (Just (nr,heat)) = fromIntegral heat
+		ignot = find ((n==) . fst) charged_inputs
+	in oper ignot
 
 
 instance Think Net Neuron where
@@ -38,7 +44,7 @@ instance Think Net Neuron where
 			m = Net {nodes = nr ++ nodes t, links = links t}
 		in	(m,nr)
 	decide t charged_inputs outputs = let
-			mapper = round . (propagate (links t))
+			mapper = round . (propagate (links t) charged_inputs)
 			charges = map mapper outputs
 		in	zip outputs charges
 	learn t (n,response) = t
