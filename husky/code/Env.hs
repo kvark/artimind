@@ -1,6 +1,7 @@
 module Env
 ( World (World)
 , Cat
+, getBrain
 , makeCat
 ) where
 
@@ -23,6 +24,8 @@ actEat (World n)
 	| otherwise	= (World (n-1), 3)
 
 type Cat = Ai.Person World Ai.Net Ai.Neuron
+getBrain :: Cat -> Ai.Net
+getBrain = Ai.extractBrain
 makeCat	:: Cat
 makeCat = let
 		brain = Ai.Net {Ai.nodes=[], Ai.links=[]}

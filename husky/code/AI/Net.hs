@@ -5,7 +5,7 @@ module AI.Net
 
 import AI.Core
 import Data.List
-
+import Data.Maybe (isNothing,fromJust)
 
 data Neuron = Neuron	deriving (Show,Eq)
 type Link =	(Neuron,Neuron)
@@ -14,7 +14,7 @@ type Link =	(Neuron,Neuron)
 data Net = Net	{
 	nodes	:: [Neuron],
 	links	:: [Link]
-}deriving ()
+}deriving (Show)
 
 
 transmitCost :: Float
@@ -72,32 +72,42 @@ getEffect lins (chInputs,chOut) (src,dst) = let
 
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 type FLink = (Float,Link)
+type MayLink = Maybe FLink
 
-findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc FLink -> FLink
+findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc FLink -> MayLink
+findExist [] _ _ = Nothing
 findExist lins charged exFun = let
 		effects = map (getEffect lins charged) lins
 		combined = zip effects lins
 		cmpFun (a,_) (b,_) = compare a b
-	in exFun cmpFun combined
+	in Just (exFun cmpFun combined)
 
-findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc FLink -> FLink
+findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc FLink -> MayLink
 findAbsent net charged exFun = let
+		result :: [Link] -> MayLink
+		result [] = Nothing
+		result lins = let
+				effects = map (getEffect (links net) charged) lins
+				combined = zip effects lins
+				cmpFun (a,_) (b,_) = compare a b
+			in Just (exFun cmpFun combined)
 		newLins = [(a,b) | a<-(nodes net), b<-(nodes net), b /= a] \\ (links net)
-		effects = map (getEffect (links net) charged) newLins
-		combined = zip effects newLins
-		cmpFun (a,_) (b,_) = compare a b
-	in exFun cmpFun combined
+	in result newLins
 
-subLearn	:: Net -> (FLink,FLink) -> (Float->Bool,Float->Bool) -> Net
-subLearn t0 (best,worst) (conA,conB) = let
+subLearn	:: Net -> (MayLink,MayLink) -> (Float->Bool,Float->Bool) -> Net
+subLearn t0 (mbest,mworst) (conA,conB) = let
 		t1
-			| conA (fst best) = let
-				tx = Net { nodes=nodes t0, links=(snd best):(links t0) }
+			| isNothing mbest = t0
+			| (conA . fst . fromJust) mbest = let
+				goodLink = snd (fromJust mbest)
+				tx = Net { nodes=nodes t0, links=goodLink : (links t0) }
 			in tx
 			| otherwise = t0
 		t2
-			| conB (fst worst) = let
-				tx = Net { nodes=nodes t1, links=(links t1) \\ [snd worst] }
+			| isNothing mworst = t1
+			| (conB . fst . fromJust) mworst = let
+				badLinks = [snd (fromJust mworst)]
+				tx = Net { nodes=nodes t1, links=(links t1) \\ badLinks }
 			in tx
 			| otherwise = t1
 	in	t2

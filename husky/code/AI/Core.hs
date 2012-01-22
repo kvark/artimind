@@ -25,7 +25,7 @@ actIdle	:: (World w) => Actor w
 actIdle w = (w,0)
 
 
-class (Eq x) => Think t x | t->x where
+class (Eq x, Show t) => Think t x | t->x where
 	-- obtain a new handle for input/output --
 	alloc	:: t -> Int -> (t,[x])
 	-- given a list of charged handles and a list of output handles
@@ -35,7 +35,7 @@ class (Eq x) => Think t x | t->x where
 	learn	:: t -> ([Ignot x],Ignot x) -> t
 
 
-data ZeroMind = ZeroMind
+data ZeroMind = ZeroMind deriving (Show)
 instance Think ZeroMind () where
 	alloc t n = (t,take n (repeat ()))
 	decide _ _ outputs = zip outputs (repeat (1::Heat))

@@ -23,7 +23,9 @@ message n = let
 		s1 = "Step " ++ show n
 		s2 = "\tAction " ++ show act
 		s3 = "\tResult " ++ show result
-	in	((s1 ++ s2 ++ s3):s, (w',b'))
+		brain = Env.getBrain b'
+		s4 = "\n\tMind: " ++ show brain
+	in	((s1 ++ s2 ++ s3 ++ s4):s, (w',b'))
 
 main	:: IO ()
 main = do

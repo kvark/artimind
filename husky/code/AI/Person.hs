@@ -1,5 +1,6 @@
-module AI.Person	(
-Person
+module AI.Person
+( Person
+, extractBrain
 , makePerson
 )where
 
@@ -11,6 +12,8 @@ import AI.Core
 data (World w, Think t x) => Person w t x =
 	Person t (Choice x) [(x,String,Sensor w)] [(x,String,Actor w)]
 
+extractBrain	:: (World w, Think t x) => Person w t x -> t
+extractBrain (Person brain _ _ _) = brain
 attachHand	:: x -> (String,y) -> (x,String,y)
 attachHand hand (name,q) = (hand,name,q)
 getHand		:: (x,y,z) -> x
