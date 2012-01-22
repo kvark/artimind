@@ -4,7 +4,7 @@ module AI.Net
 ) where
 
 import AI.Core
-import Data.List (find)
+import Data.List (find,(\\))
 
 
 data Neuron = Neuron	deriving (Show,Eq)
@@ -72,9 +72,22 @@ getEffect lins (chInputs,chOut) (src,dst) = let
 
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 
-findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc Link -> Link
-findExist lins charged exFun = exFun (getEffect lins charged) lins
+findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> Link
+findExist lins charged exFun = let
+		effects = map (getEffect lins charged) lins
+		combined = zip effects lins
+		cmpFun (a,_) (b,_) = compare a b
+		rez = exFun cmpFun combined
+	in snd rez
 
+findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> Link
+findAbsent net charged exFun = let
+		newLins = [(a,b) | a<-(nodes net), b<-(nodes net), b /= a] \\ (links net)
+		effects = map (getEffect (links net) charged) newLins
+		combined = zip effects newLins
+		cmpFun (a,_) (b,_) = compare a b
+		rez = exFun cmpFun combined
+	in snd rez
 
 --- instantiating Think class with out neural network ---
 instance Think Net Neuron where
