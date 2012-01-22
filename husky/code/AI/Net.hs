@@ -73,30 +73,23 @@ getEffect lins (chInputs,chOut) (src,dst) = let
 		sIn = signalIn lins chOut dst
 	in sOut * sIn
 
+getCompliment	:: Net -> [Link]
+getCompliment net = [(a,b) | a<-(nodes net), b<-(nodes net), b /= a] \\ (links net)
+
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 type FLink = (Float,Link)
 type MayLink = Maybe FLink
 
-findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc FLink -> MayLink
-findExist [] _ _ = Nothing
-findExist lins charged exFun = let
+findLink	:: [Link] -> ([Pair],Pair) -> ExtremeFunc FLink -> MayLink
+findLink [] _ _ = Nothing
+findLink lins charged exFun = let
 		effects = map (getEffect lins charged) lins
 		combined = zip effects lins
 		cmpFun (a,_) (b,_) = compare a b
 	in Just (exFun cmpFun combined)
 
-findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc FLink -> MayLink
-findAbsent net charged exFun = let
-		result :: [Link] -> MayLink
-		result [] = Nothing
-		result lins = let
-				effects = map (getEffect (links net) charged) lins
-				combined = zip effects lins
-				cmpFun (a,_) (b,_) = compare a b
-			in Just (exFun cmpFun combined)
-		newLins = [(a,b) | a<-(nodes net), b<-(nodes net), b /= a] \\ (links net)
-	in result newLins
 
+--- modify the net based on choosen best/worst links candidates and conditions ---
 subLearn	:: Net -> (MayLink,MayLink) -> (Float->Bool,Float->Bool) -> Net
 subLearn t0 (mbest,mworst) (conA,conB) = let
 		t1
@@ -129,11 +122,11 @@ instance Think Net Neuron where
 		in	zip outputs charges
 	learn t charged@(_,(_,response))
 		| response>0	= let
-				best = findAbsent t charged maximumBy
-				worst = findExist (links t) charged minimumBy
+				best	= findLink (getCompliment t) charged maximumBy
+				worst	= findLink (links t) charged minimumBy
 			in subLearn t (best,worst) (( >0.1 ),( <(-0.1) ))
 		| response<0	= let
-				best = findAbsent t charged minimumBy
-				worst = findExist (links t) charged maximumBy
+				best	= findLink (getCompliment t) charged minimumBy
+				worst	= findLink (links t) charged maximumBy
 			in subLearn t (best,worst) (( <0.0 ),( >0.1 ))
 		| otherwise		= t

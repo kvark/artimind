@@ -23,11 +23,13 @@ getName (_,name,_) = name
 getString	:: (Show x) => (x,String,z)	-> String
 getString (hand,name,_) = show (name,hand)
 
+
 instance (World w, Show x, Think t x) => Show (Person w t x) where
 	show (Person brain _ sensors actors) = let
 			sens = "\n\tSensors: "++ (intercalate "," $ map getString sensors)
 			acts = "\n\tActors: " ++ (intercalate "," $ map getString actors)
 		in	(show brain) ++ sens ++ acts
+
 
 instance (World w, Think t x) => Body (Person w t x) w where
 	addSensors (Person brain chooser sensors actors) input = let
