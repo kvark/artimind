@@ -71,21 +71,38 @@ getEffect lins (chInputs,chOut) (src,dst) = let
 	in sOut / sIn
 
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
+type FLink = (Float,Link)
 
-findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> (Float,Link)
+findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc FLink -> FLink
 findExist lins charged exFun = let
 		effects = map (getEffect lins charged) lins
 		combined = zip effects lins
 		cmpFun (a,_) (b,_) = compare a b
 	in exFun cmpFun combined
 
-findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> (Float,Link)
+findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc FLink -> FLink
 findAbsent net charged exFun = let
 		newLins = [(a,b) | a<-(nodes net), b<-(nodes net), b /= a] \\ (links net)
 		effects = map (getEffect (links net) charged) newLins
 		combined = zip effects newLins
 		cmpFun (a,_) (b,_) = compare a b
 	in exFun cmpFun combined
+
+subLearn	:: Net -> (FLink,FLink) -> Float -> Net
+subLearn t0 (best,worst) _ = let
+		minBest = 0.1
+		maxWorst = -0.1
+		t1
+			| (fst best) > minBest = let
+				tx = Net { links=(snd best):(links t0), nodes=nodes t0 }
+			in tx
+			| otherwise = t0
+		t2
+			| (fst worst) < maxWorst = let
+				tx = Net { links=(links t1) \\ [snd worst], nodes=nodes t1 }
+			in tx
+			| otherwise = t1
+	in	t2
 
 
 --- instantiating Think class with out neural network ---
@@ -102,9 +119,9 @@ instance Think Net Neuron where
 		| response>0	= let
 				best = findAbsent t charged maximumBy
 				worst = findExist (links t) charged minimumBy
-			in t
+			in subLearn t (best,worst) 1
 		| response<0	= let
 				best = findAbsent t charged minimumBy
 				worst = findExist (links t) charged maximumBy
-			in t
+			in subLearn t (best,worst) (-1)
 		| otherwise		= t
