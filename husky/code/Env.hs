@@ -29,7 +29,7 @@ getBrain :: Cat -> Ai.Net
 getBrain = Ai.extractBrain
 makeCat	:: Cat
 makeCat = let
-		brain = Ai.Net {Ai.nodes=[], Ai.links=[], Ai.nextId=0}
-		sensors = [( "meal",fillMeal ),( "const",Ai.feelConst 0 )]
-		actors = [( "eat",actEat ),( "idle",Ai.actIdle )]
-	in	Ai.makePerson brain Ai.chooseMax sensors actors
+	brain = Ai.Net {Ai.nodes=[], Ai.links=[], Ai.nextId=0}
+	sensors = [( "meal",fillMeal ),( "const",Ai.feelConst 0 )]
+	actors = [( "eat",actEat ),( "idle",Ai.actIdle )]
+	in Ai.makePerson brain Ai.chooseMax sensors actors
