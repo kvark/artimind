@@ -25,6 +25,6 @@ message n = let
 		s3 = "\tResult " ++ show result
 	in	((s1 ++ s2 ++ s3):s, (w',b'))
 
-
+main	:: IO ()
 main = do
 	putStrLn $ intercalate "\n" $ reverse $ fst $ message 10

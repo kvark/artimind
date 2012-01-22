@@ -46,7 +46,7 @@ chooseFirst	:: Choice x
 chooseFirst = Just . fst . head
 
 compareHeat	:: (Ord a) => (b,a) -> (b,a) -> Ordering
-compareHeat (x1,y1) (x2,y2) = compare y1 y2
+compareHeat (_,y1) (_,y2) = compare y1 y2
 
 chooseMax 	:: Choice x
 chooseMax al

@@ -11,22 +11,25 @@ import AI.Core
 data (World w, Think t x) => Person w t x =
 	Person t (Choice x) [(x,String,Sensor w)] [(x,String,Actor w)]
 
+attachHand	:: x -> (String,y) -> (x,String,y)
 attachHand hand (name,q) = (hand,name,q)
+getHand		:: (x,y,z) -> x
 getHand (hand,_,_) = hand
+getName		:: (y,String,z) -> String
 getName (_,name,_) = name
 
 
 instance (World w, Think t x) => Body (Person w t x) w where
-	addSensors (Person brain chooser sensors actors) sin = let
-			(newBrain,handles) = alloc brain (length sin)
-			ns = zipWith attachHand handles sin
+	addSensors (Person brain chooser sensors actors) input = let
+			(newBrain,handles) = alloc brain (length input)
+			ns = zipWith attachHand handles input
 		in	Person newBrain chooser (ns++sensors) actors
 	addActors (Person brain chooser sensors actors) act = let
 			(newBrain,handles) = alloc brain (length act)
 			na = zipWith attachHand handles act
 		in	Person newBrain chooser sensors (na++actors)
 	stepUp world (Person brain chooser sensors actors) = let
-			getSignal (hand,name,sense) = (hand,sense world)
+			getSignal (hand,_,sense) = (hand,sense world)
 			inputs = map getSignal sensors
 			outHandles = map getHand actors
 			decision = decide brain inputs outHandles
