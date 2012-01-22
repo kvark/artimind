@@ -15,7 +15,7 @@ type Heat		= Int				-- input/output energy
 type Sensor w	= w -> Heat			-- input signal
 type Actor w	= w -> (w,Heat)		-- output signal, changes the world
 type Ignot x	= (x,Heat)			-- charged internal handle
-type Choice x	= [Ignot x] -> Maybe x	-- choose a handle among charged ones
+type Choice x	= [Ignot x] -> x	-- choose a handle among charged ones
 
 
 feelConst	:: (World w) => Heat -> w -> Heat
@@ -43,27 +43,23 @@ instance Think ZeroMind () where
 
 
 chooseFirst	:: Choice x
-chooseFirst = Just . fst . head
+chooseFirst = fst . head
 
 compareHeat	:: (Ord a) => (b,a) -> (b,a) -> Ordering
 compareHeat (_,y1) (_,y2) = compare y1 y2
 
 chooseMax 	:: Choice x
-chooseMax al
-		| heat>0	= Just act
-		| otherwise	= Nothing
-	where (act,heat) = maximumBy compareHeat al
+chooseMax = fst . maximumBy compareHeat
 
 
 class (World w) => Body b w | b->w where
 	addSensors	:: b -> [(String,Sensor w)] -> b
 	addActors	:: b -> [(String,Actor w)] -> b
-	stepUp		:: w -> b -> Maybe (String,Actor w)
+	stepUp		:: w -> b -> (String,Actor w)
 	stepDown	:: w -> b -> (String,Heat) -> b
 	cycle		:: w -> b -> (w,b,String,Heat)
-	cycle world body = case (stepUp world body) of
-		Nothing	-> (world,body,"no",0)
-		Just (name,actor)	-> let
-				(newWorld,response) = actor world
-				newBody = stepDown world body (name,response)
-			in (newWorld,newBody,name,response)
+	cycle world body = let
+			(name,actor) = stepUp world body
+			(newWorld,response) = actor world
+			newBody = stepDown world body (name,response)
+		in (newWorld,newBody,name,response)

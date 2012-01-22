@@ -33,14 +33,12 @@ instance (World w, Think t x) => Body (Person w t x) w where
 			inputs = map getSignal sensors
 			outHandles = map getHand actors
 			decision = decide brain inputs outHandles
-		in case (chooser decision) of
-			Nothing	-> Nothing
-			Just choice	-> let
-					target = find ((==choice) . getHand) actors
-					(_,name,act) = fromJust target
-				in Just (name,act)
+			choice = chooser decision
+			target = find ((==choice) . getHand) actors
+			(_,name,act) = fromJust target
+		in (name,act)
 	stepDown world (Person brain chooser sensors actors) (name,heat) = let
-			getSignal (hand,_,sense) = (hand,sense world)
+			getSignal (h,_,sense) = (h,sense world)
 			inputs = map getSignal sensors
 			target = find ((==name) . getName) actors
 			(hand,_,_) = fromJust target
