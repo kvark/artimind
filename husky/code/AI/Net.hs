@@ -88,18 +88,16 @@ findAbsent net charged exFun = let
 		cmpFun (a,_) (b,_) = compare a b
 	in exFun cmpFun combined
 
-subLearn	:: Net -> (FLink,FLink) -> Float -> Net
-subLearn t0 (best,worst) _ = let
-		minBest = 0.1
-		maxWorst = -0.1
+subLearn	:: Net -> (FLink,FLink) -> (Float->Bool,Float->Bool) -> Net
+subLearn t0 (best,worst) (conA,conB) = let
 		t1
-			| (fst best) > minBest = let
-				tx = Net { links=(snd best):(links t0), nodes=nodes t0 }
+			| conA (fst best) = let
+				tx = Net { nodes=nodes t0, links=(snd best):(links t0) }
 			in tx
 			| otherwise = t0
 		t2
-			| (fst worst) < maxWorst = let
-				tx = Net { links=(links t1) \\ [snd worst], nodes=nodes t1 }
+			| conB (fst worst) = let
+				tx = Net { nodes=nodes t1, links=(links t1) \\ [snd worst] }
 			in tx
 			| otherwise = t1
 	in	t2
@@ -119,9 +117,9 @@ instance Think Net Neuron where
 		| response>0	= let
 				best = findAbsent t charged maximumBy
 				worst = findExist (links t) charged minimumBy
-			in subLearn t (best,worst) 1
+			in subLearn t (best,worst) (( >0.1 ),( <(-0.1) ))
 		| response<0	= let
 				best = findAbsent t charged minimumBy
 				worst = findExist (links t) charged maximumBy
-			in subLearn t (best,worst) (-1)
+			in subLearn t (best,worst) (( <0.0 ),( >0.1 ))
 		| otherwise		= t
