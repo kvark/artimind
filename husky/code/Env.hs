@@ -12,7 +12,7 @@ import qualified AI.Net		as Ai
 
 data World = World Int	deriving (Show)
 instance Ai.World World where
-	advance w = World 1
+	advance _ = World 1
 
 fillMeal	:: World -> Int
 fillMeal	(World n)
@@ -21,15 +21,15 @@ fillMeal	(World n)
 
 actEat	:: World -> (World,Ai.Heat)
 actEat (World n)
-	| n<=0		= (World 0, -1)
-	| otherwise	= (World (n-1), 3)
+	| n<=0		= (World 0, -10)
+	| otherwise	= (World (n-1), 100)
 
 type Cat = Ai.Person World Ai.Net Ai.Neuron
 getBrain :: Cat -> Ai.Net
 getBrain = Ai.extractBrain
 makeCat	:: Cat
 makeCat = let
-		brain = Ai.Net {Ai.nodes=[], Ai.links=[]}
+		brain = Ai.Net {Ai.nodes=[], Ai.links=[], Ai.nextId=0}
 		sensors = [( "meal",fillMeal ),( "const",Ai.feelConst 0 )]
-		actors = [( "eat",actEat ),( "no",Ai.actIdle )]
+		actors = [( "eat",actEat ),( "idle",Ai.actIdle )]
 	in	Ai.makePerson brain Ai.chooseMax sensors actors

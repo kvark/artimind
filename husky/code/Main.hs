@@ -25,9 +25,9 @@ message n = let
 		s2 = "\tAction " ++ show act
 		s3 = "\tResult " ++ show result
 		brain = Env.getBrain b
-		s4 = "World: " ++ show w0
-		s5 = "\tMind: " ++ show brain
-		msg = [s1++s2++s3, s4++s5]
+		s4 = "\t" ++ show w0 ++ " -> " ++ show w1
+		s5 = "\t" ++ show brain
+		msg = [s1++s2++s3, s4,s5]
 	in	(msg++s, (w2,b'))
 
 main	:: IO ()

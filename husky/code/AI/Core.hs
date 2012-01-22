@@ -23,7 +23,7 @@ feelConst	:: (World w) => Heat -> w -> Heat
 feelConst val _ = val
 
 actIdle	:: (World w) => Actor w
-actIdle w = (w,0)
+actIdle w = (w,-1)
 
 
 class (Eq x, Show t) => Think t x | t->x where

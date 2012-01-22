@@ -1,19 +1,22 @@
 module AI.Net
-( Neuron
-, Net (Net,nodes,links)
+( Neuron (Neuron)
+, Net (Net,nodes,links,nextId)
+--, propagate, signalOut, signalIn
+--, getEffect, findAbsent, findExist, subLearn
 ) where
 
 import AI.Core
 import Data.List
 import Data.Maybe (isNothing,fromJust)
 
-data Neuron = Neuron	deriving (Show,Eq)
+data Neuron = Neuron Int	deriving (Show,Eq)
 type Link =	(Neuron,Neuron)
 
 
 data Net = Net	{
 	nodes	:: [Neuron],
-	links	:: [Link]
+	links	:: [Link],
+	nextId	:: Int
 }deriving (Show)
 
 
@@ -49,7 +52,7 @@ signalOut lin charged_inputs n = let
 		sReceived = sum $ map (signalOut lin charged_inputs) incidents
 		nOut = fromIntegral $ length $ gather fst n
 		sInput = oper $ find ((n==) . fst) charged_inputs
-	in (sReceived + sInput) / nOut
+	in (sReceived + sInput) / (nOut+1)
 
 --- calculate the input signal per link on a neuron ---
 signalIn	:: [Link] -> Pair -> Neuron -> Float
@@ -61,14 +64,14 @@ signalIn lin chargedOut n = let
 		outcidents = map snd $ gather fst n
 		sResponse = sum $ map (signalIn lin chargedOut) outcidents
 		nIn = fromIntegral $ length $ gather snd n
-	in (sResponse + sOutput) / nIn
+	in (sResponse + sOutput) / (nIn+1)
 
 
 getEffect	:: [Link] -> ([Pair],Pair) -> Link -> Float
 getEffect lins (chInputs,chOut) (src,dst) = let
 		sOut = signalOut lins chInputs src
 		sIn = signalIn lins chOut dst
-	in sOut / sIn
+	in sOut * sIn
 
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 type FLink = (Float,Link)
@@ -100,14 +103,14 @@ subLearn t0 (mbest,mworst) (conA,conB) = let
 			| isNothing mbest = t0
 			| (conA . fst . fromJust) mbest = let
 				goodLink = snd (fromJust mbest)
-				tx = Net { nodes=nodes t0, links=goodLink : (links t0) }
+				tx = Net { nodes=nodes t0, nextId=nextId t0, links=goodLink : (links t0) }
 			in tx
 			| otherwise = t0
 		t2
 			| isNothing mworst = t1
 			| (conB . fst . fromJust) mworst = let
 				badLinks = [snd (fromJust mworst)]
-				tx = Net { nodes=nodes t1, links=(links t1) \\ badLinks }
+				tx = Net { nodes=nodes t1, nextId=nextId t1, links=(links t1) \\ badLinks }
 			in tx
 			| otherwise = t1
 	in	t2
@@ -116,8 +119,9 @@ subLearn t0 (mbest,mworst) (conA,conB) = let
 --- instantiating Think class with out neural network ---
 instance Think Net Neuron where
 	alloc t num = let
-			nr = take num $ repeat Neuron
-			m = Net {nodes = nr ++ nodes t, links = links t}
+			base = nextId t
+			nr = map Neuron [base..(base+num-1)]
+			m = Net {nodes = nr ++ nodes t, links = links t, nextId = base+num}
 		in	(m,nr)
 	decide t charged_inputs outputs = let
 			mapper = round . (propagate (links t) charged_inputs)
