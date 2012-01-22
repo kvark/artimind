@@ -4,7 +4,7 @@ module AI.Net
 ) where
 
 import AI.Core
-import Data.List (find,(\\))
+import Data.List
 
 
 data Neuron = Neuron	deriving (Show,Eq)
@@ -72,22 +72,21 @@ getEffect lins (chInputs,chOut) (src,dst) = let
 
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 
-findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> Link
+findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> (Float,Link)
 findExist lins charged exFun = let
 		effects = map (getEffect lins charged) lins
 		combined = zip effects lins
 		cmpFun (a,_) (b,_) = compare a b
-		rez = exFun cmpFun combined
-	in snd rez
+	in exFun cmpFun combined
 
-findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> Link
+findAbsent	:: Net -> ([Pair],Pair) -> ExtremeFunc (Float,Link) -> (Float,Link)
 findAbsent net charged exFun = let
 		newLins = [(a,b) | a<-(nodes net), b<-(nodes net), b /= a] \\ (links net)
 		effects = map (getEffect (links net) charged) newLins
 		combined = zip effects newLins
 		cmpFun (a,_) (b,_) = compare a b
-		rez = exFun cmpFun combined
-	in snd rez
+	in exFun cmpFun combined
+
 
 --- instantiating Think class with out neural network ---
 instance Think Net Neuron where
@@ -99,9 +98,13 @@ instance Think Net Neuron where
 			mapper = round . (propagate (links t) charged_inputs)
 			charges = map mapper outputs
 		in	zip outputs charges
-	learn t (_,response)
+	learn t charged@(_,(_,response))
 		| response>0	= let
+				best = findAbsent t charged maximumBy
+				worst = findExist (links t) charged minimumBy
 			in t
 		| response<0	= let
+				best = findAbsent t charged minimumBy
+				worst = findExist (links t) charged maximumBy
 			in t
 		| otherwise		= t

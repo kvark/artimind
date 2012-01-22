@@ -39,10 +39,12 @@ instance (World w, Think t x) => Body (Person w t x) w where
 					target = find ((==choice) . getHand) actors
 					(_,name,act) = fromJust target
 				in Just (name,act)
-	stepDown (Person brain chooser sensors actors) (name,heat) = let
+	stepDown world (Person brain chooser sensors actors) (name,heat) = let
+			getSignal (hand,_,sense) = (hand,sense world)
+			inputs = map getSignal sensors
 			target = find ((==name) . getName) actors
 			(hand,_,_) = fromJust target
-			newBrain = learn brain (hand,heat)
+			newBrain = learn brain (inputs,(hand,heat))
 		in	Person newBrain chooser sensors actors
 
 

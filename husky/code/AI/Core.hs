@@ -32,7 +32,7 @@ class (Eq x) => Think t x | t->x where
 	-- produce a corresponding list of output charged handles --
 	decide	:: t -> [Ignot x] -> [x] -> [Ignot x]
 	-- adapt to chosen handle with response --
-	learn	:: t -> Ignot x -> t
+	learn	:: t -> ([Ignot x],Ignot x) -> t
 
 
 data ZeroMind = ZeroMind
@@ -59,11 +59,11 @@ class (World w) => Body b w | b->w where
 	addSensors	:: b -> [(String,Sensor w)] -> b
 	addActors	:: b -> [(String,Actor w)] -> b
 	stepUp		:: w -> b -> Maybe (String,Actor w)
-	stepDown	:: b -> (String,Heat) -> b
+	stepDown	:: w -> b -> (String,Heat) -> b
 	cycle		:: w -> b -> (w,b,String,Heat)
 	cycle world body = case (stepUp world body) of
 		Nothing	-> (world,body,"no",0)
 		Just (name,actor)	-> let
 				(newWorld,response) = actor world
-				newBody = stepDown body (name,response)
+				newBody = stepDown world body (name,response)
 			in (newWorld,newBody,name,response)
