@@ -73,7 +73,7 @@ getEffect lins (chInputs,chOut) (src,dst) = let
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 
 findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc Link -> Link
-findExist links charged exFun = head links
+findExist lins charged exFun = exFun (getEffect lins charged) lins
 
 
 --- instantiating Think class with out neural network ---
