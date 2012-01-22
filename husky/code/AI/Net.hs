@@ -1,8 +1,8 @@
 module AI.Net
 ( Neuron (Neuron)
 , Net (Net,nodes,links,nextId)
---, propagate, signalOut, signalIn
---, getEffect, findAbsent, findExist, subLearn
+--, propagate, signalOut, signalIn, getEffect
+--, getCompliment, findLink, findBoth, subLearn
 ) where
 
 import AI.Core
@@ -79,14 +79,21 @@ getCompliment net = [(a,b) | a<-(nodes net), b<-(nodes net), b /= a] \\ (links n
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 type FLink = (Float,Link)
 type MayLink = Maybe FLink
+type FunLink = ExtremeFunc FLink
 
-findLink	:: [Link] -> ([Pair],Pair) -> ExtremeFunc FLink -> MayLink
+findLink	:: [Link] -> ([Pair],Pair) -> FunLink -> MayLink
 findLink [] _ _ = Nothing
 findLink lins charged exFun = let
 		effects = map (getEffect lins charged) lins
 		combined = zip effects lins
 		cmpFun (a,_) (b,_) = compare a b
 	in Just (exFun cmpFun combined)
+
+findBoth	:: Net -> ([Pair],Pair) -> (FunLink,FunLink) -> (MayLink,MayLink)
+findBoth net charged (funOut,funIn) = let
+		ma = findLink (getCompliment net) charged funOut
+		mb = findLink (links net) charged funIn
+	in (ma,mb)
 
 
 --- modify the net based on choosen best/worst links candidates and conditions ---
@@ -122,11 +129,9 @@ instance Think Net Neuron where
 		in	zip outputs charges
 	learn t charged@(_,(_,response))
 		| response>0	= let
-				best	= findLink (getCompliment t) charged maximumBy
-				worst	= findLink (links t) charged minimumBy
-			in subLearn t (best,worst) (( >0.1 ),( <(-0.1) ))
+			bw = findBoth t charged (maximumBy,minimumBy)
+			in subLearn t bw (( >0.1 ),( <(-0.1) ))
 		| response<0	= let
-				best	= findLink (getCompliment t) charged minimumBy
-				worst	= findLink (links t) charged maximumBy
-			in subLearn t (best,worst) (( <0.0 ),( >0.1 ))
+			bw = findBoth t charged (minimumBy,maximumBy)
+			in subLearn t bw (( <0.0 ),( >0.1 ))
 		| otherwise		= t
