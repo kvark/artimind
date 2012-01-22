@@ -6,8 +6,8 @@ module AI.Net
 import AI.Core
 import Data.List (find)
 
-data Neuron = Neuron	deriving (Show,Eq)
 
+data Neuron = Neuron	deriving (Show,Eq)
 type Link =	(Neuron,Neuron)
 
 
@@ -53,18 +53,27 @@ signalOut lin charged_inputs n = let
 
 --- calculate the input signal per link on a neuron ---
 signalIn	:: [Link] -> Pair -> Neuron -> Float
-signalIn lin charged_out n = let
+signalIn lin chargedOut n = let
 		sOutput
-			| n == (fst charged_out)	= fromIntegral (snd charged_out)
+			| n == (fst chargedOut)	= fromIntegral (snd chargedOut)
 			| otherwise					= 0
 		gather fun m = filter ((m==) . fun) lin
 		outcidents = map snd $ gather fst n
-		sResponse = sum $ map (signalIn lin charged_out) outcidents
+		sResponse = sum $ map (signalIn lin chargedOut) outcidents
 		nIn = fromIntegral $ length $ gather snd n
 	in (sResponse + sOutput) / nIn
 
 
+getEffect	:: [Link] -> ([Pair],Pair) -> Link -> Float
+getEffect lins (chInputs,chOut) (src,dst) = let
+		sOut = signalOut lins chInputs src
+		sIn = signalIn lins chOut dst
+	in sOut / sIn
 
+type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
+
+findExist	:: [Link] -> ([Pair],Pair) -> ExtremeFunc Link -> Link
+findExist links charged exFun = head links
 
 
 --- instantiating Think class with out neural network ---
