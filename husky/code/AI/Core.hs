@@ -1,5 +1,5 @@
 module AI.Core
-( World, Heat, Sensor, Actor, Ignot, Choice
+( World (advance), Heat, Sensor, Actor, Ignot, Choice
 , Think (alloc,decide,learn)
 , Body (addSensors,addActors,stepUp,stepDown,cycle)
 , ZeroMind (ZeroMind)
@@ -9,7 +9,8 @@ module AI.Core
 import Data.List (maximumBy)
 
 
-class World w
+class (Show w) => World w where
+	advance	:: w -> w
 
 type Heat		= Int				-- input/output energy
 type Sensor w	= w -> Heat			-- input signal

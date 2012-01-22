@@ -11,7 +11,8 @@ import qualified AI.Net		as Ai
 
 
 data World = World Int	deriving (Show)
-instance Ai.World World
+instance Ai.World World where
+	advance w = World 1
 
 fillMeal	:: World -> Int
 fillMeal	(World n)
