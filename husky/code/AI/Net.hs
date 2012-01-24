@@ -23,27 +23,35 @@ data Net = Net	{
 transmitCost :: Float
 transmitCost = 0.1
 
+cached	:: (Int->a) -> (Int->a)
+cached fun = ((map fun [0..]) !!)
+
+
 ---	calculate the propagated neuron charge	---
 --- TODO: cache results in a map ---
 type Pair = Ignot Neuron
-propagate	:: [Link] -> [Pair] -> Neuron -> Float
-propagate lin charged_inputs n = let
+propagateDir	:: [Link] -> [Pair] -> Neuron -> Float
+propagateDir lin charge n = let
 	oper :: (Maybe Pair) -> Float
 	oper Nothing = let
 		gather fun m = filter ((m==) . fun) lin
 		incidents = map fst	$ gather snd n
 		inCounter = fromIntegral . length . (gather fst)
 		magnitudes = map inCounter incidents
-		inputs = map (propagate lin charged_inputs) incidents
+		inputs = map (propagate lin charge) incidents
 		total = sum (zipWith (/) inputs magnitudes)
 		in	max 0 (total-transmitCost)
 	oper (Just (_,heat)) = fromIntegral heat
-	ignot = find ((n==) . fst) charged_inputs
+	ignot = find ((n==) . fst) charge
 	in oper ignot
 
+propagate	:: [Link] -> [Pair] -> Neuron -> Float
+propagate lins charge (Neuron n) = cached ((propagateDir lins charge) . Neuron) n
+
+
 --- calculate the output signal per link on a neuron ---
-signalOut	:: [Link] -> [Pair] -> Neuron -> Float
-signalOut lin charged_inputs n = let
+signalOutDir	:: [Link] -> [Pair] -> Neuron -> Float
+signalOutDir lin charged_inputs n = let
 	oper :: (Maybe Pair) -> Float
 	oper Nothing = 0.0
 	oper (Just (_,heat)) = fromIntegral heat
@@ -54,9 +62,12 @@ signalOut lin charged_inputs n = let
 	sInput = oper $ find ((n==) . fst) charged_inputs
 	in (sReceived + sInput) / (nOut+1)
 
+signalOut	:: [Link] -> [Pair] -> Neuron -> Float
+signalOut lins chargedIn (Neuron n) = cached ((signalOutDir lins chargedIn) . Neuron) n
+
 --- calculate the input signal per link on a neuron ---
-signalIn	:: [Link] -> Pair -> Neuron -> Float
-signalIn lin chargedOut n = let
+signalInDir	:: [Link] -> Pair -> Neuron -> Float
+signalInDir lin chargedOut n = let
 	sOutput
 		| n == (fst chargedOut)	= fromIntegral (snd chargedOut)
 		| otherwise					= 0
@@ -65,6 +76,9 @@ signalIn lin chargedOut n = let
 	sResponse = sum $ map (signalIn lin chargedOut) outcidents
 	nIn = fromIntegral $ length $ gather snd n
 	in (sResponse + sOutput) / (nIn+1)
+
+signalIn	:: [Link] -> Pair -> Neuron -> Float
+signalIn lins chargedOut (Neuron n) = cached ((signalInDir lins chargedOut) . Neuron) n
 
 
 getEffect	:: [Link] -> ([Pair],Pair) -> Link -> Float
