@@ -38,7 +38,7 @@ class (Eq x, Show t) => Think t x | t->x where
 
 data ZeroMind = ZeroMind deriving (Show)
 instance Think ZeroMind () where
-	alloc t n = (t,take n (repeat ()))
+	alloc t n = (t,replicate n ())
 	decide _ _ outputs = zip outputs (repeat (1::Heat))
 	learn t _ = t
 

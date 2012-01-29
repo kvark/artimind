@@ -26,9 +26,9 @@ getString (hand,name,_) = show (name,hand)
 
 instance (World w, Show x, Think t x) => Show (Person w t x) where
 	show (Person brain _ sensors actors) = let
-		sens = "\n\tSensors: "++ (intercalate "," $ map getString sensors)
-		acts = "\n\tActors: " ++ (intercalate "," $ map getString actors)
-		in	(show brain) ++ sens ++ acts
+		sens = "\n\tSensors: "++ intercalate "," (map getString sensors)
+		acts = "\n\tActors: " ++ intercalate "," (map getString actors)
+		in	show brain ++ sens ++ acts
 
 
 instance (World w, Think t x) => Body (Person w t x) w where
@@ -59,7 +59,7 @@ instance (World w, Think t x) => Body (Person w t x) w where
 
 
 makePerson	:: (World w, Think t x) =>
-	t -> (Choice x) -> [(String,Sensor w)] -> [(String,Actor w)] -> Person w t x
+	t -> Choice x -> [(String,Sensor w)] -> [(String,Actor w)] -> Person w t x
 makePerson brain chooser sensors actors = let
 	p0 = Person brain chooser [] []
 	p1 = addSensors p0 sensors
