@@ -24,9 +24,8 @@ message n = let
 	s1 = "Step " ++ show n
 	s2 = "\tAction " ++ show act
 	s3 = "\tResult " ++ show result
-	brain = Env.getBrain b
 	s4 = '\t' : (show w0 ++ " -> " ++ show w1)
-	s5 = '\t' : show brain
+	s5 = '\t' : show b
 	msg = [s1++s2++s3, s4,s5]
 	in (msg++s, (w2,b'))
 

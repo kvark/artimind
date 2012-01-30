@@ -138,8 +138,8 @@ instance Think Net Neuron where
 		nr = map Neuron [base..(base+num-1)]
 		m = Net {nodes = nr ++ nodes t, links = links t, nextId = base+num}
 		in	(m,nr)
-	decide t charge outputs = let
-		mapper = round . propagate (links t) charge
+	decide t chargeIn outputs = let
+		mapper = round . propagate (links t) chargeIn
 		outCharges = map mapper outputs
 		in	zip outputs outCharges
 	learn t charge@(_,(_,response))
