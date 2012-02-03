@@ -7,7 +7,7 @@ module AI.Net
 
 import AI.Core
 import Data.List
-import Data.Maybe (isNothing,fromJust)
+import Data.Maybe ()
 
 data Neuron = Neuron Int	deriving (Show,Eq)
 type Link =	(Neuron,Neuron)
@@ -113,22 +113,14 @@ findBoth net charge (funOut,funIn) = let
 
 --- modify the net based on choosen best/worst links candidates and conditions ---
 subLearn	:: Net -> (MayLink,MayLink) -> (Float->Bool,Float->Bool) -> Net
-subLearn t0 (mbest,mworst) (conA,conB) = let
-	t1
-		| isNothing mbest = t0
-		| (conA . fst . fromJust) mbest = let
-			goodLink = snd (fromJust mbest)
-			tx = Net { nodes=nodes t0, nextId=nextId t0, links=goodLink : links t0 }
-			in tx
-		| otherwise = t0
-	t2
-		| isNothing mworst = t1
-		| (conB . fst . fromJust) mworst = let
-			badLinks = [snd (fromJust mworst)]
-			tx = Net { nodes=nodes t1, nextId=nextId t1, links=links t1 \\ badLinks }
-			in tx
-		| otherwise = t1
-	in	t2
+subLearn t (mbest,mworst) (conA,conB) = let
+	getLinks	:: MayLink -> (Float->Bool) -> [Link]
+	getLinks Nothing _  = []
+	getLinks (Just (heat,lin)) con	= [lin | con heat]
+	goodLinks = getLinks mbest conA
+	badLinks = getLinks mworst conB
+	newLinks = (links t \\ badLinks) ++ goodLinks
+	in Net { nodes=nodes t, nextId=nextId t, links=newLinks }
 
 
 --- instantiating Think class with out neural network ---
