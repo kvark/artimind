@@ -1,7 +1,7 @@
 module AI.Net
 ( Neuron (Neuron)
 , Net (Net,nodes,links,nextId)
-, propagate, signalOut, signalIn, getEffect
+, propagate, signalOut, signalIn, transitLink, getEffect
 , getCompliment, findLink, findBoth, subLearn
 ) where
 
@@ -11,7 +11,7 @@ import Data.Maybe ()
 
 data Neuron = Neuron Int	deriving (Show,Eq)
 type Link =	(Neuron,Neuron)
-
+type Pair = Ignot Neuron
 
 data Net = Net	{
 	nodes	:: [Neuron],
@@ -29,8 +29,8 @@ cached fun = (map fun [0..] !!)
 
 ---	calculate the propagated neuron charge	---
 --- TODO: cache results in a map ---
-type Pair = Ignot Neuron
-propagateDir	:: [Link] -> [Pair] -> Neuron -> Float
+
+propagateDir,propagate	:: [Link] -> [Pair] -> Neuron -> Float
 propagateDir lin charge n = let
 	oper :: Maybe Pair -> Float
 	oper Nothing = let
@@ -45,12 +45,11 @@ propagateDir lin charge n = let
 	ignot = find ((n==) . fst) charge
 	in oper ignot
 
-propagate	:: [Link] -> [Pair] -> Neuron -> Float
 propagate lins charge (Neuron n) = cached (propagateDir lins charge . Neuron) n
 
 
 --- calculate the output signal per link on a neuron ---
-signalOutDir	:: [Link] -> [Pair] -> Neuron -> Float
+signalOutDir,signalOut	:: [Link] -> [Pair] -> Neuron -> Float
 signalOutDir lin charged_inputs n = let
 	oper :: Maybe Pair -> Float
 	oper Nothing = 0.0
@@ -62,11 +61,10 @@ signalOutDir lin charged_inputs n = let
 	sInput = oper $ find ((n==) . fst) charged_inputs
 	in (sReceived + sInput) / (nOut+1)
 
-signalOut	:: [Link] -> [Pair] -> Neuron -> Float
-signalOut lins chargedIn (Neuron n) = cached (signalOutDir lins chargedIn . Neuron) n
+signalOut lin chargedIn (Neuron n) = cached (signalOutDir lin chargedIn . Neuron) n
 
 --- calculate the input signal per link on a neuron ---
-signalInDir	:: [Link] -> Pair -> Neuron -> Float
+signalInDir,signalIn	:: [Link] -> Pair -> Neuron -> Float
 signalInDir lin chargedOut n = let
 	sOutput
 		| n == fst chargedOut	= fromIntegral (snd chargedOut)
@@ -77,15 +75,31 @@ signalInDir lin chargedOut n = let
 	nIn = fromIntegral $ length $ gather snd n
 	in (sResponse + sOutput) / (nIn+1)
 
-signalIn	:: [Link] -> Pair -> Neuron -> Float
 signalIn lins chargedOut (Neuron n) = cached (signalInDir lins chargedOut . Neuron) n
 
+--- calculate the transit connectivity between nodes ---
+transitLinkDir,transitLink2,transitLink	:: [Link] -> Neuron -> Neuron -> Float
+transitLinkDir all_links to from = let
+	wave = map snd $ filter ((from==) . fst) all_links
+	summa = sum $ map (transitLink all_links to) wave
+	result
+		| to==from	= 1.0
+		| null wave	= 0.0
+		| otherwise = summa / fromIntegral (length wave)
+	in result
 
+transitLink2 all_links to (Neuron n) = cached (transitLinkDir all_links to . Neuron) n
+transitLink all_links (Neuron n) from = let
+	xxx num = transitLink2 all_links (Neuron num) from
+	in cached xxx n
+
+--- evaluate a potential/old link profit ---
 getEffect	:: [Link] -> ([Pair],Pair) -> Link -> Float
 getEffect lins (chInputs,chOut) (src,dst) = let
 	sOut = signalOut lins chInputs src
 	sIn = signalIn lins chOut dst
 	in sOut * sIn
+
 
 getCompliment	:: Net -> [Link]
 getCompliment net = [(a,b) | a<-nodes net, b<-nodes net, b /= a] \\ links net
@@ -105,9 +119,11 @@ findLink lins fun exFun = let
 
 findBoth	:: Net -> ([Pair],Pair) -> (FunLink,FunLink) -> (MayLink,MayLink)
 findBoth net charge (funOut,funIn) = let
-	fe = getEffect (links net) charge
-	ma = findLink (getCompliment net) fe funOut
-	mb = findLink (links net) fe funIn
+	transit = transitLink (links net)
+	feIn = getEffect (links net) charge
+	feOut (a,b) = (feIn (a,b)) * (1.0 - transit a b)
+	ma = findLink (getCompliment net) feOut funOut
+	mb = findLink (links net) feIn funIn
 	in (ma,mb)
 
 
@@ -137,8 +153,8 @@ instance Think Net Neuron where
 	learn t charge@(_,(_,response))
 		| response>0	= let
 			bw = findBoth t charge (maximumBy,minimumBy)
-			in subLearn t bw (( >0.1 ),( <(-0.1) ))
+			in subLearn t bw (( >0.5 ),( <0.1 ))
 		| response<0	= let
 			bw = findBoth t charge (minimumBy,maximumBy)
-			in subLearn t bw (( <0.0 ),( >0.1 ))
+			in subLearn t bw (( <0.1 ),( >0.5 ))
 		| otherwise		= t
