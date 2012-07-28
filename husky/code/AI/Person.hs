@@ -44,9 +44,10 @@ instance (World w, Think t x, RandomGen g) => Body (Person w t x g) w where
 	stepUp world (Person brain gen chooser sensors actors) = let
 		getSignal (hand,_,sense) = (hand,sense world)
 		inputs = map getSignal sensors
-		outHandles = map getHand actors
-		decision = decide brain inputs outHandles
-		choice = chooser gen decision
+		decision = decide brain inputs
+		outHands = map getHand actors
+		outIgnots = zip outHands (map decision outHands)
+		choice = chooser gen outIgnots
 		target = find ((==choice) . getHand) actors
 		(_,name,act) = fromJust target
 		in (name,act)
@@ -55,7 +56,7 @@ instance (World w, Think t x, RandomGen g) => Body (Person w t x g) w where
 		inputs = map getSignal sensors
 		target = find ((==name) . getName) actors
 		(hand,_,_) = fromJust target
-		newBrain = learn brain (inputs,(hand,heat))
+		newBrain = learn brain inputs (hand,heat)
 		g2 = snd (next gen)
 		in	Person newBrain g2 chooser sensors actors
 

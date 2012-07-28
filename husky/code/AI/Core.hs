@@ -25,11 +25,11 @@ type Choice g x	= g -> [Ignot x] -> x	-- choose a handle among charged ones
 class (Eq x, Show t) => Think t x | t->x where
 	-- obtain a new handle for input/output --
 	alloc	:: t -> Int -> (t,[x])
-	-- given a list of charged handles and a list of output handles
-	-- produce a corresponding list of output charged handles --
-	decide	:: t -> [Ignot x] -> [x] -> [Ignot x]
+	-- given a list of charged handles and --
+	-- an output handle, produce a charge on it --
+	decide	:: t -> [Ignot x] -> x -> Heat
 	-- adapt to chosen handle with response --
-	learn	:: t -> ([Ignot x],Ignot x) -> t
+	learn	:: t -> [Ignot x] -> Ignot x -> t
 
 
 --- Trivial implementations ---
@@ -44,8 +44,8 @@ actIdle w = (w,-1)
 data ZeroMind = ZeroMind deriving (Show)
 instance Think ZeroMind () where
 	alloc t n = (t,replicate n ())
-	decide _ _ outputs = zip outputs (repeat (1::Heat))
-	learn t _ = t
+	decide _ _ _ = 1
+	learn t _ _ = t
 
 
 --- Decision choosers ---
@@ -61,20 +61,20 @@ chooseMax _ = fst . maximumBy compareHeat
 
 chooseRandom	:: (RandomGen g) => Int -> Choice g x
 chooseRandom power gen ignots = let
-	wFun (ignot,h) = (ignot,h^power)
+	wFun (x,h) = (x,h^power)
 	weighted = map wFun ignots
 	total = sum (map snd weighted)
 	(point,_) = randomR (1,total) gen
-	folder (w,r) (el,h)
-		| w<=0		= (0,r)
-		| w<=h		= (0,el)
-		| otherwise	= (w-h,r)
-	accum = (point, fst (head ignots))
-	answer = foldl folder accum weighted
-	in snd answer
+	folder (rez,w) (cur,h)
+		| w<=0		= (rez,0)
+		| w<=h		= (cur,0)
+		| otherwise	= (rez,w-h)
+	accum = (fst (head ignots),point)
+	rig = foldl folder accum weighted
+	in fst rig
 
 
---- The World ---
+--- Body class ---
 
 class (World w) => Body b w | b->w where
 	addSensors	:: b -> [(String,Sensor w)] -> b

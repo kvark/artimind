@@ -1,17 +1,23 @@
 module AI.Net
 ( Neuron (Neuron)
 , Net (Net,nodes,links,nextId)
-, propagate, signalOut, signalIn, transitLink, getEffect
-, getCompliment, findLink, findBoth, subLearn
+, propagate--, signalOut, signalIn, transitLink, getEffect
+--, getCompliment, findLink, findBoth, subLearn
 ) where
 
 import AI.Core
 import Data.List
 import Data.Maybe ()
 
-data Neuron = Neuron Int	deriving (Show,Eq)
+type NeuroFun = [Float] -> Float
+data Neuron = Neuron NeuroFun Int
 type Link =	(Neuron,Neuron)
 type Pair = Ignot Neuron
+
+instance Show Neuron where
+	show (Neuron _ num) = "Neuron " ++ show num
+instance Eq Neuron where
+	(Neuron _ a) == (Neuron _ b) = a == b
 
 data Net = Net	{
 	nodes	:: [Neuron],
@@ -19,35 +25,36 @@ data Net = Net	{
 	nextId	:: Int
 }deriving (Show)
 
-
-transmitCost :: Float
-transmitCost = 0.1
+standardFun :: NeuroFun
+standardFun list = (sum list) - 0.1
 
 cached	:: (Int->a) -> Int->a
 cached fun = (map fun [0..] !!)
 
 
 ---	calculate the propagated neuron charge	---
---- TODO: cache results in a map ---
 
 propagateDir,propagate	:: [Link] -> [Pair] -> Neuron -> Float
-propagateDir lin charge n = let
+propagateDir lin charge n@(Neuron functor _) = let
 	oper :: Maybe Pair -> Float
 	oper Nothing = let
-		gather fun m = filter ((m==) . fun) lin
+		gather accessor m = filter ((m==) . accessor) lin
+		incidents :: [Neuron]
 		incidents = map fst	$ gather snd n
+		inCounter :: Neuron -> Float	-- number of outputs of a neuron
 		inCounter = fromIntegral . length . gather fst
+		magnitudes,inputs :: [Float]
 		magnitudes = map inCounter incidents
 		inputs = map (propagate lin charge) incidents
-		total = sum (zipWith (/) inputs magnitudes)
-		in	max 0 (total-transmitCost)
+		total = functor (zipWith (/) inputs magnitudes)
+		in	max 0 total
 	oper (Just (_,heat)) = fromIntegral heat
 	ignot = find ((n==) . fst) charge
 	in oper ignot
 
-propagate lins charge (Neuron n) = cached (propagateDir lins charge . Neuron) n
+propagate lins charge (Neuron fun n) = cached (propagateDir lins charge . Neuron fun) n
 
-
+{-
 --- calculate the output signal per link on a neuron ---
 signalOutDir,signalOut	:: [Link] -> [Pair] -> Neuron -> Float
 signalOutDir lin charged_inputs n = let
@@ -127,7 +134,7 @@ findBoth net charge (funOut,funIn) = let
 	in (ma,mb)
 
 
---- modify the net based on choosen best/worst links candidates and conditions ---
+--- modify the net based on chosen best/worst links candidates and conditions ---
 subLearn	:: Net -> (MayLink,MayLink) -> (Float->Bool,Float->Bool) -> Net
 subLearn t (mbest,mworst) (conA,conB) = let
 	getLinks	:: MayLink -> (Float->Bool) -> [Link]
@@ -137,20 +144,20 @@ subLearn t (mbest,mworst) (conA,conB) = let
 	badLinks = getLinks mworst conB
 	newLinks = (links t \\ badLinks) ++ goodLinks
 	in Net { nodes=nodes t, nextId=nextId t, links=newLinks }
+-}
 
-
---- instantiating Think class with out neural network ---
+--- instantiating Think class with our neural network ---
 instance Think Net Neuron where
 	alloc t num = let
 		base = nextId t
-		nr = map Neuron [base..(base+num-1)]
+		nr = map (Neuron standardFun) [base..(base+num-1)]
 		m = Net {nodes = nr ++ nodes t, links = links t, nextId = base+num}
 		in	(m,nr)
-	decide t chargeIn outputs = let
-		mapper = round . propagate (links t) chargeIn
-		outCharges = map mapper outputs
-		in	zip outputs outCharges
-	learn t charge@(_,(_,response))
+	-- todo: cache propagate result --
+	decide t charges = round . (propagate (links t) charges)
+	learn t _ _ = t
+	{-
+	learn t charge (_,response)
 		| response>0	= let
 			bw = findBoth t charge (maximumBy,minimumBy)
 			in subLearn t bw (( >0.5 ),( <0.1 ))
@@ -158,3 +165,4 @@ instance Think Net Neuron where
 			bw = findBoth t charge (minimumBy,maximumBy)
 			in subLearn t bw (( <0.1 ),( >0.5 ))
 		| otherwise		= t
+	-}

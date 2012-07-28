@@ -13,7 +13,7 @@ import qualified System.Random	as R
 
 data World = World Int	deriving (Show)
 instance Ai.World World where
-	advance _ = World 1
+	advance _ = World 0
 
 fillMeal	:: World -> Int
 fillMeal	(World n)
