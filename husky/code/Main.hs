@@ -7,7 +7,7 @@ import qualified AI.Core as Ai
 import qualified Env
 
 type State = ( Env.World, Env.Cat )
-state	:: Int -> (( String, Ai.Heat ), State)
+state	:: Int -> (( String, Ai.HeatIn ), State)
 state 0 = (( "init", 0 ), ( Env.World 0, Env.makeCat ))
 state n = let
 	(w,b) = snd (state (n-1))

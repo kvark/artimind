@@ -13,17 +13,19 @@ import qualified System.Random	as R
 
 data World = World Int	deriving (Show)
 instance Ai.World World where
-	advance _ = World 0
+	advance _ = World 1
 
 fillMeal	:: World -> Int
 fillMeal	(World n)
 	| n > 0		= 1
 	| otherwise	= 0
 
-actEat	:: World -> (World,Ai.Heat)
+actIdle,actEat	:: Ai.Actor World
+actIdle w = (w,0)
 actEat (World n)
 	| n<=0		= (World 0, -10)
 	| otherwise	= (World (n-1), 100)
+
 
 type Cat = Ai.Person World Ai.Net Ai.Neuron R.StdGen
 getBrain :: Cat -> Ai.Net
@@ -32,7 +34,7 @@ makeCat	:: Cat
 makeCat = let
 	brain = Ai.Net {Ai.nodes=[], Ai.links=[], Ai.nextId=0}
 	gen = R.mkStdGen 1
-	chooser = Ai.chooseRandom 1
-	sensors = [( "meal",fillMeal ),( "const",Ai.feelConst 0 )]
-	actors = [( "eat",actEat ),( "idle",Ai.actIdle )]
+	chooser = Ai.chooseRandom 1 0.5
+	sensors = [( "meal",fillMeal ),( "const",Ai.feelConst 1 )]
+	actors = [( "eat",actEat ),( "idle",actIdle )]
 	in Ai.makePerson brain gen chooser sensors actors
