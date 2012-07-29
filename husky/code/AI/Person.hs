@@ -46,7 +46,7 @@ instance (World w, Think t x, RandomGen g) => Body (Person w t x g) w where
 		inputs = map getSignal sensors
 		decision = decide brain inputs
 		outHands = map getHand actors
-		outIgnots = zip outHands (map decision outHands)
+		outIgnots = zipMap outHands decision
 		choice = chooser gen outIgnots
 		target = find ((==choice) . getHand) actors
 		(_,name,act) = fromJust target

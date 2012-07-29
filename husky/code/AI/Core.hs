@@ -2,7 +2,8 @@ module AI.Core
 ( World (advance), Heat, Sensor, Actor, Ignot, Choice
 , Think (alloc,decide,learn)
 , Body (addSensors,addActors,stepUp,stepDown,cycle)
-, ZeroMind (ZeroMind), feelConst, actIdle
+, ZeroMind (ZeroMind), zipMap
+, feelConst, actIdle
 , chooseFirst, chooseMax, chooseRandom
 ) where
 
@@ -31,6 +32,11 @@ class (Eq x, Show t) => Think t x | t->x where
 	-- adapt to chosen handle with response --
 	learn	:: t -> [Ignot x] -> Ignot x -> t
 
+
+--- Helper methods ---
+
+zipMap	:: [a] -> (a->b) -> [(a,b)]
+zipMap list fun = zip list (map fun list)
 
 --- Trivial implementations ---
 

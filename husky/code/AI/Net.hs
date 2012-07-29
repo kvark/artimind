@@ -34,18 +34,27 @@ cached fun = (map fun [0..] !!)
 
 ---	calculate the propagated neuron charge	---
 
+type LinkAccess		= Link -> Neuron
+type LinkFunction	= [Link] -> Neuron -> [Neuron]
+getLinksAny :: LinkAccess -> LinkAccess -> LinkFunction
+getLinksAny accessor extractor linSet n = let
+	connections = filter ((n==) . accessor) linSet
+	in map extractor connections
+getLinksIn,getLinksOut :: LinkFunction
+getLinksIn	= getLinksAny fst snd
+getLinksOut	= getLinksAny snd fst
+
+
 propagateDir,propagate	:: [Link] -> [Pair] -> Neuron -> Float
-propagateDir lin charge n@(Neuron functor _) = let
+propagateDir linSet charge n@(Neuron functor _) = let
 	oper :: Maybe Pair -> Float
 	oper Nothing = let
-		gather accessor m = filter ((m==) . accessor) lin
-		incidents :: [Neuron]
-		incidents = map fst	$ gather snd n
+		incidents = getLinksIn linSet n
 		inCounter :: Neuron -> Float	-- number of outputs of a neuron
-		inCounter = fromIntegral . length . gather fst
+		inCounter = fromIntegral . length . getLinksOut linSet
 		magnitudes,inputs :: [Float]
 		magnitudes = map inCounter incidents
-		inputs = map (propagate lin charge) incidents
+		inputs = map (propagate linSet charge) incidents
 		total = functor (zipWith (/) inputs magnitudes)
 		in	max 0 total
 	oper (Just (_,heat)) = fromIntegral heat
@@ -53,6 +62,15 @@ propagateDir lin charge n@(Neuron functor _) = let
 	in oper ignot
 
 propagate lins charge (Neuron fun n) = cached (propagateDir lins charge . Neuron fun) n
+
+computeFlowDir	:: [Link] -> Neuron -> Neuron -> Float
+computeFlowDir linSet dest source
+	| dest == source	= 0.0
+	| otherwise 		= let	
+	in 0.0
+
+getCompliment	:: Net -> [Link]
+getCompliment net = [(a,b) | a<-nodes net, b<-nodes net, b /= a] \\ links net
 
 {-
 --- calculate the output signal per link on a neuron ---
@@ -108,9 +126,6 @@ getEffect lins (chInputs,chOut) (src,dst) = let
 	in sOut * sIn
 
 
-getCompliment	:: Net -> [Link]
-getCompliment net = [(a,b) | a<-nodes net, b<-nodes net, b /= a] \\ links net
-
 type ExtremeFunc a = (a->a->Ordering) ->[a] ->a
 type FLink = (Float,Link)
 type MayLink = Maybe FLink
@@ -153,9 +168,34 @@ instance Think Net Neuron where
 		nr = map (Neuron standardFun) [base..(base+num-1)]
 		m = Net {nodes = nr ++ nodes t, links = links t, nextId = base+num}
 		in	(m,nr)
-	-- todo: cache propagate result --
-	decide t charges = round . (propagate (links t) charges)
-	learn t _ _ = t
+
+	decide t charges = round . propagate (links t) charges
+
+	learn t charges (nOut,response)
+		| response>0	= let
+			simulate :: Link -> Float
+			simulate ln = propagate (ln:links t) charges nOut
+			candidates = zipMap (getCompliment t) simulate
+			folder (l1,r1) (l2,r2)
+				| r2<r1		= (l2,r2)
+				| otherwise	= (l1,r1)
+			(best,rv) = foldl1 folder candidates
+			in if rv > (fromIntegral response) + 0.5
+				then Net { nodes=nodes t, nextId=nextId t, links = best:links t }
+				else t
+		| response<0	= let
+			simulate :: Link -> Float
+			simulate ln = propagate (links t \\ [ln]) charges nOut
+			candidates = zipMap (links t) simulate
+			folder (l1,r1) (l2,r2)
+				| r2<r1		= (l2,r2)
+				| otherwise	= (l1,r1)
+			(best,rv) = foldl1 folder candidates
+			in if rv < (fromIntegral response) - 0.5
+				then Net { nodes=nodes t, nextId=nextId t, links = links t \\ [best] }
+				else t
+		| otherwise	= t
+
 	{-
 	learn t charge (_,response)
 		| response>0	= let
